@@ -8,6 +8,7 @@
 
 #define EIGEN_DONT_ALIGN_STATICALLY
 #include <Eigen/Dense>
+#include "Camera.h"
 
 class Cloth;
 class Particle;
@@ -27,7 +28,7 @@ public:
 	void init();
 	void tare();
 	void reset();
-	void step();
+	void step(const std::shared_ptr<Camera> camera);
 	
 	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const;
 	

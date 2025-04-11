@@ -47,6 +47,11 @@ void Scene::load(const string &RESOURCE_DIR)
 	spheres.push_back(sphere);
 	sphere->r = 0.1;
 	sphere->x = Vector3d(0.0, 0.2, 0.0);
+
+	auto heldSphere = make_shared<Particle>(sphereShape);
+	spheres.push_back(heldSphere);
+	heldSphere->r = 0.1;
+	heldSphere->x = Vector3d(-100.0, -100.0, -100.0); // Somewhere arbitrary, can properly init later
 }
 
 void Scene::init()
@@ -72,14 +77,18 @@ void Scene::reset()
 	cloth->reset();
 }
 
-void Scene::step()
+void Scene::step(const std::shared_ptr<Camera> camera)
 {
 	t += h;
 	
 	// Move the sphere
-	if(!spheres.empty()) {
-		auto s = spheres.front();
+	if(spheres.size() >= 2) {
+		auto s = spheres.at(0);
 		s->x(2) = 0.5 * sin(0.5*t);
+
+		auto heldSphere = spheres.at(1);
+		glm::vec3 cameraTranslation = camera->getTranslation() + normalize(camera->getForward());
+		heldSphere->x = Eigen::Vector3d(cameraTranslation.x, cameraTranslation.y, cameraTranslation.z);
 	}
 	
 	// Simulate the cloth

@@ -58,7 +58,7 @@ static void char_callback(GLFWwindow *window, unsigned int key)
 	keyToggles[key] = !keyToggles[key];
 	switch(key) {
 		case 'h':
-			scene->step();
+			scene->step(camera);
 			break;
 		case 'r':
 			scene->reset();
@@ -124,7 +124,7 @@ static void init()
 	prog->setVerbose(false);
 	
 	camera = make_shared<Camera>();
-	camera->setTranslations(glm::vec3(0.0f, 1.0f, -2.0f));
+	camera->setTranslation(glm::vec3(0.0f, 1.0f, -2.0f));
 
 	scene = make_shared<Scene>();
 	scene->load(RESOURCE_DIR);
@@ -239,7 +239,7 @@ void stepperFunc()
 	while(!stop_flag) {
 		auto t0 = std::chrono::system_clock::now();
 		if(keyToggles[(unsigned)' ']) {
-			scene->step();
+			scene->step(camera);
 		}
 		auto t1 = std::chrono::system_clock::now();
 		double dt = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count());
