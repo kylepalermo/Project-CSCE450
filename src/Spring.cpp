@@ -12,6 +12,7 @@ Spring::Spring(shared_ptr<Particle> p0, shared_ptr<Particle> p1, double alpha)
 	this->p0 = p0;
 	this->p1 = p1;
 	this->alpha = alpha;
+	this->broken = false;
 	
 	L = (p1->x0 - p0->x0).norm();
 }

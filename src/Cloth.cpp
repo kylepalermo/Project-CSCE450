@@ -280,8 +280,16 @@ void Cloth::step(double h, const Vector3d &grav, const vector< shared_ptr<Partic
 	}
 
 	for (shared_ptr<Spring> spring : springs) {
+		if (spring->broken) {
+			continue;
+		}
+
 		Vector3d deltax = spring->p1->x - spring->p0->x;
 		float l = float(deltax.norm());
+		if (l >= spring->L * 2.5) {
+			spring->broken = true;
+			continue;
+		}
 
 		double C = l - spring->L;
 		Vector3d deltaC0 = -deltax / l;

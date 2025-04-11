@@ -16,6 +16,7 @@ public:
 	std::shared_ptr<Particle> p1;
 	double L;
 	double alpha;
+	bool broken;
 };
 
 #endif
