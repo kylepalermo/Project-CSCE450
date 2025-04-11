@@ -79,3 +79,11 @@ void Camera::applyViewMatrix(std::shared_ptr<MatrixStack> MV) const
 
 	MV->multMatrix(glm::lookAt(eye, target, up));
 }
+
+glm::vec3 Camera::getTranslation() const {
+	return translations;
+}
+
+glm::vec3 Camera::getForward() const {
+	return glm::vec3(sin(yaw), pitch, cos(yaw));
+}

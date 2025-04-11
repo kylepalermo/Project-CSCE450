@@ -15,7 +15,7 @@ class Camera
 public:	
 	Camera();
 	virtual ~Camera();
-	void setTranslations(const glm::vec3 &t) { translations = t; };
+	void setTranslation(const glm::vec3 &t) { translations = t; };
 	void setAspect(float a) { aspect = a; };
 	void setFovy(float f) { fovy = f; };
 	void setZnear(float z) { znear = z; };
@@ -27,6 +27,8 @@ public:
 	void pollKeyPresses(GLFWwindow *window);
 	void applyProjectionMatrix(std::shared_ptr<MatrixStack> P) const;
 	void applyViewMatrix(std::shared_ptr<MatrixStack> MV) const;
+	glm::vec3 getTranslation() const;
+	glm::vec3 getForward() const;
 	
 private:
 	float aspect;
