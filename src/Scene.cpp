@@ -28,8 +28,8 @@ void Scene::load(const string &RESOURCE_DIR)
 	
 	grav << 0.0, -9.8, 0.0;
 	
-	int rows = 100;
-	int cols = 100;
+	int rows = 15;
+	int cols = 15;
 	double mass = 0.1;
 	double alpha = 0.0;
 	double damping = 1e-5;

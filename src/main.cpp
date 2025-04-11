@@ -124,6 +124,7 @@ static void init()
 	prog->setVerbose(false);
 	
 	camera = make_shared<Camera>();
+	camera->setTranslations(glm::vec3(0.0f, 1.0f, -2.0f));
 
 	scene = make_shared<Scene>();
 	scene->load(RESOURCE_DIR);
@@ -146,6 +147,7 @@ void render()
 	// Use the window size for camera.
 	glfwGetWindowSize(window, &width, &height);
 	camera->setAspect((float)width/(float)height);
+	camera->pollKeyPresses(window);
 	
 	// Clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
