@@ -32,7 +32,7 @@ void Scene::load(const string &RESOURCE_DIR)
 	int cols = 15;
 	double mass = 0.1;
 	double alpha = 0.0;
-	double damping = 1e-5;
+	double damping = 1e-3;
 	double pradius = 0.01; // Particle radius, used for collisions
 	Vector3d x00(-0.25, 0.5, 0.0);
 	Vector3d x01(0.25, 0.5, 0.0);

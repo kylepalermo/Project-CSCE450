@@ -14,6 +14,14 @@ class Spring;
 class MatrixStack;
 class Program;
 
+struct TriangleSprings {
+	std::shared_ptr<Spring> edgeSprings[3];
+};
+
+struct QuadSprings {
+	TriangleSprings triangleSprings[2];
+};
+
 class Cloth
 {
 public:
@@ -33,6 +41,7 @@ public:
 	void tare();
 	void reset();
 	void updatePosNor();
+	void updateEle();
 	void step(double h, const Eigen::Vector3d &grav, const std::vector< std::shared_ptr<Particle> > spheres);
 	
 	void init();
@@ -43,6 +52,7 @@ private:
 	int cols;
 	std::vector< std::shared_ptr<Particle> > particles;
 	std::vector< std::shared_ptr<Spring> > springs;
+	std::vector< std::vector<QuadSprings> > cellSprings;
 	
 	std::vector<unsigned int> eleBuf;
 	std::vector<float> posBuf;

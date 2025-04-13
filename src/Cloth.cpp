@@ -34,6 +34,8 @@ Cloth::Cloth(int rows, int cols,
 	
 	this->rows = rows;
 	this->cols = cols;
+
+	cellSprings.resize(rows - 1, vector<QuadSprings>(cols - 1));
 	
 	// Create particles
 	int nVerts = rows*cols; // Total number of vertices
@@ -75,6 +77,12 @@ Cloth::Cloth(int rows, int cols,
 				alpha
 			);
 			springs.push_back(spring);
+			if (i < rows - 1) {
+				cellSprings.at(i).at(j).triangleSprings[0].edgeSprings[0] = spring;
+			}
+			if (i > 0) {
+				cellSprings.at(i - 1).at(j).triangleSprings[1].edgeSprings[0] = spring;
+			}
 		}
 	}
 	
@@ -87,6 +95,12 @@ Cloth::Cloth(int rows, int cols,
 				alpha
 			);
 			springs.push_back(spring);
+			if (j < rows - 1) {
+				cellSprings.at(i).at(j).triangleSprings[0].edgeSprings[1] = spring;
+			}
+			if (j > 0) {
+				cellSprings.at(i).at(j - 1).triangleSprings[1].edgeSprings[1] = spring;
+			}
 		}
 	}
 
@@ -105,6 +119,8 @@ Cloth::Cloth(int rows, int cols,
 				alpha
 			);
 			springs.push_back(spring2);
+			cellSprings.at(i).at(j).triangleSprings[0].edgeSprings[2] = spring2;
+			cellSprings.at(i).at(j).triangleSprings[1].edgeSprings[2] = spring2;
 		}
 	}
 
@@ -140,23 +156,13 @@ Cloth::Cloth(int rows, int cols,
 	posBuf.resize(nVerts*3);
 	norBuf.resize(nVerts*3);
 	updatePosNor();
+	updateEle();
 	
 	// Texture coordinates (don't change)
 	for(int i = 0; i < rows; ++i) {
 		for(int j = 0; j < cols; ++j) {
 			texBuf.push_back(i/(rows-1.0f));
 			texBuf.push_back(j/(cols-1.0f));
-		}
-	}
-	
-	// Elements (don't change)
-	for(int i = 0; i < rows-1; ++i) {
-		for(int j = 0; j < cols; ++j) {
-			int k0 = i*cols + j;
-			int k1 = k0 + cols;
-			// Triangle strip
-			eleBuf.push_back(k0);
-			eleBuf.push_back(k1);
 		}
 	}
 }
@@ -178,6 +184,7 @@ void Cloth::reset()
 		p->reset();
 	}
 	updatePosNor();
+	updateEle();
 }
 
 void Cloth::updatePosNor()
@@ -262,7 +269,39 @@ void Cloth::updatePosNor()
 			norBuf[3*k+2] = float(nor(2));
 		}
 	}
+}
 
+void Cloth::updateEle() {
+	eleBuf.clear();
+	for (int i = 0; i < rows - 1; i++) {
+		for (int j = 0; j < cols - 1; j++) {
+			bool brokenEdge = false;
+			for (int edge = 0; edge < 3; edge++) {
+				if (cellSprings.at(i).at(j).triangleSprings[0].edgeSprings[edge]->broken) {
+					brokenEdge = true;
+					break;
+				}
+			}
+			if (!brokenEdge) {
+				eleBuf.push_back(i * cols + j);
+				eleBuf.push_back((i + 1) * cols + j);
+				eleBuf.push_back(i * cols + (j + 1));
+			}
+
+			brokenEdge = false;
+			for (int edge = 0; edge < 3; edge++) {
+				if (cellSprings.at(i).at(j).triangleSprings[1].edgeSprings[edge]->broken) {
+					brokenEdge = true;
+					break;
+				}
+			}
+			if (!brokenEdge) {
+				eleBuf.push_back(i * cols + (j + 1));
+				eleBuf.push_back((i + 1) * cols + j);
+				eleBuf.push_back((i + 1) * cols + (j + 1));
+			}
+		}
+	}
 }
 
 void Cloth::step(double h, const Vector3d &grav, const vector< shared_ptr<Particle> > spheres)
@@ -325,6 +364,7 @@ void Cloth::step(double h, const Vector3d &grav, const vector< shared_ptr<Partic
 
 	// Update position and normal buffers
 	updatePosNor();
+	updateEle();
 }
 
 void Cloth::init()
@@ -343,7 +383,7 @@ void Cloth::init()
 	
 	glGenBuffers(1, &eleBufID);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eleBufID);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, eleBuf.size()*sizeof(unsigned int), &eleBuf[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, eleBuf.size()*sizeof(unsigned int), &eleBuf[0], GL_DYNAMIC_DRAW);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -375,9 +415,8 @@ void Cloth::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> p) const
 		glVertexAttribPointer(h_tex, 2, GL_FLOAT, GL_FALSE, 0, (const void *)0);
 	}
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eleBufID);
-	for(int i = 0; i < rows; ++i) {
-		glDrawElements(GL_TRIANGLE_STRIP, 2*cols, GL_UNSIGNED_INT, (const void *)(2*cols*i*sizeof(unsigned int)));
-	}
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, eleBuf.size()*sizeof(unsigned int), &eleBuf[0], GL_DYNAMIC_DRAW);
+	glDrawElements(GL_TRIANGLES, eleBuf.size(), GL_UNSIGNED_INT, 0);
 	if(h_tex >= 0) {
 		glDisableVertexAttribArray(h_tex);
 	}
