@@ -17,9 +17,12 @@ Scene::Scene() :
 	t(0.0),
 	h(1e-2),
 	grav(0.0, 0.0, 0.0),
-	wind(0.0, 0.0, 5.0),
-	windChangeRate(0.0),
-	windMaxMagnitude(5.0)
+	wind(0.0, 0.0, 0.0),
+	windMaxMagnitude(0.005),
+	windTarget(0.0, 0.0, 0.0),
+	prevWindTarget(0.0, 0.0, 0.0),
+	windN(100),
+	windI(0)
 {
 }
 
@@ -99,21 +102,17 @@ void Scene::step(const std::shared_ptr<Camera> camera)
 	}
 	
 	// Update the wind
-	double windMagnitude = wind.norm();
-	double windDirection = atan2(wind.z(), wind.x());
+	windI++;
+	if (windI == windN) {
+		prevWindTarget = windTarget;
+		double windMagnitude = windMaxMagnitude * rand() / RAND_MAX;
+		double windDirection = 2.0 * M_PI * rand() / RAND_MAX;
+		windTarget = Vector3d(windMagnitude * cos(windDirection), 0.0, windMagnitude * sin(windDirection));
 
-	windMagnitude += h * windChangeRate * (-1.0 + 2.0 * rand() / RAND_MAX);
-	windDirection += h * windChangeRate * (-1.0 + 2.0 * rand() / RAND_MAX);
-
-	windMagnitude = max(0.0, min(windMaxMagnitude, windMagnitude));
-	while (windDirection > 2 * M_PI) {
-		windDirection -= 2 * M_PI;
+		windI = 0;
 	}
-	while (windDirection < 0.0) {
-		windDirection += 2 * M_PI;
-	}
-
-	wind = Vector3d(windMagnitude * cos(windDirection), 0.0, windMagnitude * sin(windDirection));
+	double alpha = double(windI) / double(windN);
+	wind = prevWindTarget * (1.0 - alpha) + windTarget * alpha;
 
 	// Simulate the cloth
 	cloth->step(h, grav, wind, spheres);

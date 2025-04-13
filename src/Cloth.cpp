@@ -312,7 +312,7 @@ void Cloth::step(double h, const Vector3d &grav, const Eigen::Vector3d &wind, co
 			continue;
 		}
 
-		Vector3d particleForce = particle->m * grav - particle->d * particle->v + particle->m * wind;
+		Vector3d particleForce = particle->m * grav - particle->d * particle->v + wind;
 		particle->v += (h / particle->m) * particleForce;
 		particle->p = particle->x;
 		particle->x += h * particle->v;
