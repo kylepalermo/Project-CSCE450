@@ -304,7 +304,7 @@ void Cloth::updateEle() {
 	}
 }
 
-void Cloth::step(double h, const Vector3d &grav, const vector< shared_ptr<Particle> > spheres)
+void Cloth::step(double h, const Vector3d &grav, const Eigen::Vector3d &wind, const vector< shared_ptr<Particle> > spheres)
 {
 	for (shared_ptr<Particle> particle : particles) {
 		if (particle->fixed) {
@@ -312,7 +312,7 @@ void Cloth::step(double h, const Vector3d &grav, const vector< shared_ptr<Partic
 			continue;
 		}
 
-		Vector3d particleForce = particle->m * grav - particle->d * particle->v;
+		Vector3d particleForce = particle->m * grav - particle->d * particle->v + particle->m * wind;
 		particle->v += (h / particle->m) * particleForce;
 		particle->p = particle->x;
 		particle->x += h * particle->v;

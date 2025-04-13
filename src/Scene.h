@@ -38,6 +38,9 @@ private:
 	double t;
 	double h;
 	Eigen::Vector3d grav;
+	Eigen::Vector3d wind;
+	double windChangeRate;
+	double windMaxMagnitude;
 	
 	std::shared_ptr<Shape> sphereShape;
 	std::shared_ptr<Cloth> cloth;

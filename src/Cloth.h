@@ -42,7 +42,7 @@ public:
 	void reset();
 	void updatePosNor();
 	void updateEle();
-	void step(double h, const Eigen::Vector3d &grav, const std::vector< std::shared_ptr<Particle> > spheres);
+	void step(double h, const Eigen::Vector3d &grav, const Eigen::Vector3d &wind, const std::vector< std::shared_ptr<Particle> > spheres);
 	
 	void init();
 	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> p) const;

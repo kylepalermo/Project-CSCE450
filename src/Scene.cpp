@@ -7,13 +7,19 @@
 #include "Shape.h"
 #include "Program.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h> 
+
 using namespace std;
 using namespace Eigen;
 
 Scene::Scene() :
 	t(0.0),
 	h(1e-2),
-	grav(0.0, 0.0, 0.0)
+	grav(0.0, 0.0, 0.0),
+	wind(0.0, 0.0, 5.0),
+	windChangeRate(0.0),
+	windMaxMagnitude(5.0)
 {
 }
 
@@ -58,6 +64,7 @@ void Scene::init()
 {
 	sphereShape->init();
 	cloth->init();
+	srand(time(0));
 }
 
 void Scene::tare()
@@ -91,8 +98,25 @@ void Scene::step(const std::shared_ptr<Camera> camera)
 		heldSphere->x = Eigen::Vector3d(cameraTranslation.x, cameraTranslation.y, cameraTranslation.z);
 	}
 	
+	// Update the wind
+	double windMagnitude = wind.norm();
+	double windDirection = atan2(wind.z(), wind.x());
+
+	windMagnitude += h * windChangeRate * (-1.0 + 2.0 * rand() / RAND_MAX);
+	windDirection += h * windChangeRate * (-1.0 + 2.0 * rand() / RAND_MAX);
+
+	windMagnitude = max(0.0, min(windMaxMagnitude, windMagnitude));
+	while (windDirection > 2 * M_PI) {
+		windDirection -= 2 * M_PI;
+	}
+	while (windDirection < 0.0) {
+		windDirection += 2 * M_PI;
+	}
+
+	wind = Vector3d(windMagnitude * cos(windDirection), 0.0, windMagnitude * sin(windDirection));
+
 	// Simulate the cloth
-	cloth->step(h, grav, spheres);
+	cloth->step(h, grav, wind, spheres);
 }
 
 void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const
