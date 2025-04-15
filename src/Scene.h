@@ -8,7 +8,9 @@
 
 #define EIGEN_DONT_ALIGN_STATICALLY
 #include <Eigen/Dense>
+
 #include "Camera.h"
+#include "Plane.h"
 
 class Cloth;
 class Particle;
@@ -47,8 +49,10 @@ private:
 	int windI;
 	
 	std::shared_ptr<Shape> sphereShape;
+	std::shared_ptr<Shape> planeShape;
 	std::shared_ptr<Cloth> cloth;
 	std::vector< std::shared_ptr<Particle> > spheres;
+	std::vector< std::shared_ptr<Plane> > planes;
 };
 
 #endif

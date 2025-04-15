@@ -9,6 +9,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
+#include "Plane.h"
+
 class Particle;
 class Spring;
 class MatrixStack;
@@ -42,7 +44,7 @@ public:
 	void reset();
 	void updatePosNor();
 	void updateEle();
-	void step(double h, const Eigen::Vector3d &grav, const Eigen::Vector3d &wind, const std::vector< std::shared_ptr<Particle> > spheres);
+	void step(double h, const Eigen::Vector3d &grav, const Eigen::Vector3d &wind, const std::vector< std::shared_ptr<Particle> > spheres, const std::vector< std::shared_ptr<Plane> > planes);
 	
 	void init();
 	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> p) const;

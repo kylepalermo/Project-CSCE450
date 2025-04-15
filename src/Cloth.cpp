@@ -304,7 +304,7 @@ void Cloth::updateEle() {
 	}
 }
 
-void Cloth::step(double h, const Vector3d &grav, const Eigen::Vector3d &wind, const vector< shared_ptr<Particle> > spheres)
+void Cloth::step(double h, const Vector3d &grav, const Eigen::Vector3d &wind, const vector< shared_ptr<Particle> > spheres, const vector< shared_ptr<Plane> > planes)
 {
 	for (shared_ptr<Particle> particle : particles) {
 		if (particle->fixed) {
@@ -354,6 +354,19 @@ void Cloth::step(double h, const Vector3d &grav, const Eigen::Vector3d &wind, co
 
 			if ((particle->x - sphere->x).norm() < particle->r + sphere->r) {
 				particle->x = (sphere->r + particle->r) * (particle->x - sphere->x).normalized() + sphere->x;
+			}
+		}
+	}
+
+	for (shared_ptr<Plane> plane : planes) {
+		for (shared_ptr<Particle> particle : particles) {
+			if (particle->fixed) {
+				continue;
+			}
+
+			float distance = (particle->x - plane->x).dot(plane->n);
+			if (distance < particle->r) {
+				particle->x = particle->x + plane->n * (particle->r - distance);
 			}
 		}
 	}

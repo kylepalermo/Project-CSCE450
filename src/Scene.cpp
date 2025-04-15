@@ -21,7 +21,7 @@ Scene::Scene() :
 	windMaxMagnitude(0.005),
 	windTarget(0.0, 0.0, 0.0),
 	prevWindTarget(0.0, 0.0, 0.0),
-	windN(100),
+	windN(200),
 	windI(0)
 {
 }
@@ -51,6 +51,9 @@ void Scene::load(const string &RESOURCE_DIR)
 	
 	sphereShape = make_shared<Shape>();
 	sphereShape->loadMesh(RESOURCE_DIR + "sphere2.obj");
+
+	planeShape = make_shared<Shape>();
+	planeShape->loadMesh(RESOURCE_DIR + "square.obj");
 	
 	auto sphere = make_shared<Particle>(sphereShape);
 	spheres.push_back(sphere);
@@ -60,12 +63,16 @@ void Scene::load(const string &RESOURCE_DIR)
 	auto heldSphere = make_shared<Particle>(sphereShape);
 	spheres.push_back(heldSphere);
 	heldSphere->r = 0.1;
-	heldSphere->x = Vector3d(-100.0, -100.0, -100.0); // Somewhere arbitrary, can properly init later
+	heldSphere->x = Vector3d(-100.0, -100.0, -100.0); // Somewhere arbitrary
+
+	auto ground = make_shared<Plane>(planeShape);
+	planes.push_back(ground);
 }
 
 void Scene::init()
 {
 	sphereShape->init();
+	planeShape->init();
 	cloth->init();
 	srand(time(0));
 }
@@ -115,7 +122,7 @@ void Scene::step(const std::shared_ptr<Camera> camera)
 	wind = prevWindTarget * (1.0 - alpha) + windTarget * alpha;
 
 	// Simulate the cloth
-	cloth->step(h, grav, wind, spheres);
+	cloth->step(h, grav, wind, spheres, planes);
 }
 
 void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const
@@ -123,6 +130,9 @@ void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) con
 	glUniform3fv(prog->getUniform("kdFront"), 1, Vector3f(1.0, 1.0, 1.0).data());
 	for(auto s : spheres) {
 		s->draw(MV, prog);
+	}
+	for (auto p : planes) {
+		p->draw(MV, prog);
 	}
 	cloth->draw(MV, prog);
 }
