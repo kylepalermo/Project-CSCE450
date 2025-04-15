@@ -304,8 +304,14 @@ void Cloth::updateEle() {
 	}
 }
 
-void Cloth::step(double h, const Vector3d &grav, const Eigen::Vector3d &wind, const vector< shared_ptr<Particle> > spheres, const vector< shared_ptr<Plane> > planes)
-{
+void Cloth::step(
+	double h,
+	const Eigen::Vector3d &grav,
+	const Eigen::Vector3d &wind,
+	const std::vector< std::shared_ptr<Particle> > spheres,
+	const std::vector< std::shared_ptr<Plane> > planes,
+	const std::vector< std::shared_ptr<Cylinder> > cylinders
+) {
 	for (shared_ptr<Particle> particle : particles) {
 		if (particle->fixed) {
 			particle->v = particle->v0;
@@ -324,7 +330,7 @@ void Cloth::step(double h, const Vector3d &grav, const Eigen::Vector3d &wind, co
 		}
 
 		Vector3d deltax = spring->p1->x - spring->p0->x;
-		float l = float(deltax.norm());
+		double l = deltax.norm();
 		if (l >= spring->L * 2.5) {
 			spring->broken = true;
 			continue;
@@ -364,9 +370,39 @@ void Cloth::step(double h, const Vector3d &grav, const Eigen::Vector3d &wind, co
 				continue;
 			}
 
-			float distance = (particle->x - plane->x).dot(plane->n);
+			double distance = (particle->x - plane->x).dot(plane->n);
 			if (distance < particle->r) {
-				particle->x = particle->x + plane->n * (particle->r - distance);
+				particle->x = particle->x - plane->n * (distance - particle->r);
+			}
+		}
+	}
+
+	for (shared_ptr<Cylinder> cylinder : cylinders) {
+		for (shared_ptr<Particle> particle : particles) {
+			if (particle->fixed) {
+				continue;
+			}
+
+			double topDistance = (particle->x - (cylinder->x + cylinder->h * cylinder->axis)).dot(cylinder->axis) - particle->r;
+			double bottomDistance = (particle->x - cylinder->x).dot(-cylinder->axis) - particle->r;
+
+			Vector3d d = particle->x - cylinder->x;
+			d = d - (d.dot(cylinder->axis)) * cylinder->axis;
+			double radialDistance = d.norm() - cylinder->r - particle->r;
+
+			if (topDistance < 0.0 && bottomDistance < 0.0 && radialDistance < 0.0) {
+				if (topDistance > bottomDistance && topDistance > radialDistance) {
+					// Move above cylinder
+					particle->x = particle->x - cylinder->axis * topDistance;
+				}
+				else if (bottomDistance > radialDistance) {
+					// Move below cylinder
+					particle->x = particle->x + cylinder->axis * bottomDistance;
+				}
+				else {
+					// Move beside cylinder
+					particle->x = particle->x - d.normalized() * radialDistance;
+				}
 			}
 		}
 	}

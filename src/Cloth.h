@@ -10,6 +10,7 @@
 #include <Eigen/Sparse>
 
 #include "Plane.h"
+#include "Cylinder.h"
 
 class Particle;
 class Spring;
@@ -44,7 +45,14 @@ public:
 	void reset();
 	void updatePosNor();
 	void updateEle();
-	void step(double h, const Eigen::Vector3d &grav, const Eigen::Vector3d &wind, const std::vector< std::shared_ptr<Particle> > spheres, const std::vector< std::shared_ptr<Plane> > planes);
+	void step(
+		double h, 
+		const Eigen::Vector3d &grav, 
+		const Eigen::Vector3d &wind, 
+		const std::vector< std::shared_ptr<Particle> > spheres, 
+		const std::vector< std::shared_ptr<Plane> > planes,
+		const std::vector< std::shared_ptr<Cylinder> > cylinders
+	);
 	
 	void init();
 	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> p) const;

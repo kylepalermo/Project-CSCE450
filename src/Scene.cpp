@@ -54,6 +54,9 @@ void Scene::load(const string &RESOURCE_DIR)
 
 	planeShape = make_shared<Shape>();
 	planeShape->loadMesh(RESOURCE_DIR + "square.obj");
+
+	cylinderShape = make_shared<Shape>();
+	cylinderShape->loadMesh(RESOURCE_DIR + "cylinder.obj");
 	
 	auto sphere = make_shared<Particle>(sphereShape);
 	spheres.push_back(sphere);
@@ -67,12 +70,18 @@ void Scene::load(const string &RESOURCE_DIR)
 
 	auto ground = make_shared<Plane>(planeShape);
 	planes.push_back(ground);
+
+	auto pole = make_shared<Cylinder>(cylinderShape);
+	cylinders.push_back(pole);
+	pole->r = 0.1;
+	pole->h = 0.2;
 }
 
 void Scene::init()
 {
 	sphereShape->init();
 	planeShape->init();
+	cylinderShape->init();
 	cloth->init();
 	srand(time(0));
 }
@@ -122,7 +131,7 @@ void Scene::step(const std::shared_ptr<Camera> camera)
 	wind = prevWindTarget * (1.0 - alpha) + windTarget * alpha;
 
 	// Simulate the cloth
-	cloth->step(h, grav, wind, spheres, planes);
+	cloth->step(h, grav, wind, spheres, planes, cylinders);
 }
 
 void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const
@@ -133,6 +142,9 @@ void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) con
 	}
 	for (auto p : planes) {
 		p->draw(MV, prog);
+	}
+	for (auto c : cylinders) {
+		c->draw(MV, prog);
 	}
 	cloth->draw(MV, prog);
 }

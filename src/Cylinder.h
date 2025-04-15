@@ -1,7 +1,6 @@
-#ifndef PLANE_H
-#define PLANE_H
+#ifndef CYLINDER_H
+#define CYLINDER_H
 
-#include <vector>
 #include <memory>
 
 #define EIGEN_DONT_ALIGN_STATICALLY
@@ -19,14 +18,16 @@
 #include "Program.h"
 #include "MatrixStack.h"
 
-class Plane {
-	const std::shared_ptr<Shape> plane;
+class Cylinder {
+	const std::shared_ptr<Shape> cylinder;
 public:
-	Plane(const std::shared_ptr<Shape> shape);
+	Cylinder(const std::shared_ptr<Shape> shape);
 	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const;
-	
+
+	double r; // radius
+	double h; // height
 	Eigen::Vector3d x; // position
-	Eigen::Vector3d n; // normal
+	Eigen::Vector3d axis; // axis
 };
 
-#endif // !PLANE_H
+#endif // !CYLINDER_H
