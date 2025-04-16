@@ -234,25 +234,24 @@ void render()
 
 void stepperFunc()
 {
-	double t = 0;
-	int n = 0;
+	auto stepInterval = std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(
+		std::chrono::duration<double>(1.0 / 300.0) // 1/300 second
+	);
+	auto nextStepTime = std::chrono::high_resolution_clock::now();
+
 	while(!stop_flag) {
-		auto t0 = std::chrono::system_clock::now();
 		if(keyToggles[(unsigned)' ']) {
-			scene->step(camera);
-		}
-		auto t1 = std::chrono::system_clock::now();
-		double dt = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count());
-		t += dt*1e-3;
-		n++;
-		auto start = std::chrono::high_resolution_clock::now();
-		while (std::chrono::high_resolution_clock::now() - start < std::chrono::microseconds(1)) {}
-		if(t > 1000) {
-			if(keyToggles[(unsigned)' '] && keyToggles[(unsigned)'t']) {
-				cout << t/n << " ms/step" << endl;
+			auto now = std::chrono::high_resolution_clock::now();
+			if (now >= nextStepTime) {
+				scene->step(camera);
+				nextStepTime += stepInterval;
 			}
-			t = 0;
-			n = 0;
+			else {
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			}
+		}
+		else {
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 	}
 }

@@ -21,7 +21,7 @@ Scene::Scene() :
 	windMaxMagnitude(0.005),
 	windTarget(0.0, 0.0, 0.0),
 	prevWindTarget(0.0, 0.0, 0.0),
-	windN(200),
+	windN(1500),
 	windI(0)
 {
 }
