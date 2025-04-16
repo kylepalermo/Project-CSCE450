@@ -52,7 +52,7 @@ private:
 	std::shared_ptr<Shape> sphereShape;
 	std::shared_ptr<Shape> planeShape;
 	std::shared_ptr<Shape> cylinderShape;
-	std::shared_ptr<Cloth> cloth;
+	std::vector< std::shared_ptr<Cloth> > cloths;
 	std::vector< std::shared_ptr<Particle> > spheres;
 	std::vector< std::shared_ptr<Plane> > planes;
 	std::vector< std::shared_ptr<Cylinder> > cylinders;
