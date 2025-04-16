@@ -14,6 +14,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include "Shape.h"
 #include "Program.h"
 #include "MatrixStack.h"

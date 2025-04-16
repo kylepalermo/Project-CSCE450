@@ -12,8 +12,22 @@ void Cylinder::draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Progr
 	if (cylinder) {
 		MV->pushMatrix();
 		MV->translate(float(x(0)), float(x(1)), float(x(2)));
-		// TODO: make sure rotate works the way it should here
-		//MV->rotate()
+		
+		Eigen::Vector3d up(0.0, 1.0, 0.0);
+		Eigen::Vector3d rotationAxis = up.cross(axis);
+		double dotProduct = std::max(-1.0, std::min(1.0, up.dot(axis)));
+		double rotationAngle = acos(dotProduct);
+
+		if (rotationAxis.squaredNorm() < 1e-12) {
+			if (dotProduct < 0.0) {
+				MV->rotate(M_PI, glm::vec3(1.0f, 0.0f, 0.0f));
+			}
+		}
+		else {
+			rotationAxis.normalize();
+			MV->rotate(rotationAngle, glm::vec3(rotationAxis.x(), rotationAxis.y(), rotationAxis.z()));
+		}
+
 		MV->scale(r, h, r);
 		glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
 		cylinder->draw(prog);
