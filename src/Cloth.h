@@ -55,7 +55,7 @@ public:
 	);
 	
 	void init();
-	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> p) const;
+	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> p);
 	
 private:
 	int rows;

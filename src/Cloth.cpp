@@ -183,8 +183,6 @@ void Cloth::reset()
 	for(auto p : particles) {
 		p->reset();
 	}
-	updatePosNor();
-	updateEle();
 }
 
 void Cloth::updatePosNor()
@@ -410,10 +408,6 @@ void Cloth::step(
 	for (shared_ptr<Particle> particle : particles) {
 		particle->v = (1 / h) * (particle->x - particle->p);
 	}
-
-	// Update position and normal buffers
-	updatePosNor();
-	updateEle();
 }
 
 void Cloth::init()
@@ -440,8 +434,10 @@ void Cloth::init()
 	assert(glGetError() == GL_NO_ERROR);
 }
 
-void Cloth::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> p) const
-{
+void Cloth::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> p) {
+	updatePosNor();
+	updateEle();
+
 	// Draw mesh
 	glUniform3f(p->getUniform("kdFront"), 0.894f, 0.882f, 0.792f);
 	glUniform3f(p->getUniform("kdBack"),  0.776f, 0.843f, 0.835f);
