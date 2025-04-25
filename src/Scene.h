@@ -12,12 +12,19 @@
 #include "Camera.h"
 #include "Plane.h"
 #include "Cylinder.h"
+#include "Tetrahedron.h"
 
 class Cloth;
 class Particle;
 class MatrixStack;
 class Program;
 class Shape;
+
+enum HeldObject {
+	NONE,
+	SPHERE,
+	TETRAHEDRON
+};
 
 class Scene
 {
@@ -32,11 +39,10 @@ public:
 	void tare();
 	void reset();
 	void step(const std::shared_ptr<Camera> camera);
-	
+	void setHeldObject(HeldObject heldObject, const std::shared_ptr<Camera> camera);
 	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const;
 	
 	double getTime() const { return t; }
-	
 private:
 	double t;
 	double h;
@@ -48,14 +54,18 @@ private:
 	Eigen::Vector3d prevWindTarget;
 	int windN;
 	int windI;
+
+	HeldObject heldObject;
 	
 	std::shared_ptr<Shape> sphereShape;
 	std::shared_ptr<Shape> planeShape;
 	std::shared_ptr<Shape> cylinderShape;
+	std::shared_ptr<Shape> tetrahedronShape;
 	std::vector< std::shared_ptr<Cloth> > cloths;
 	std::vector< std::shared_ptr<Particle> > spheres;
 	std::vector< std::shared_ptr<Plane> > planes;
 	std::vector< std::shared_ptr<Cylinder> > cylinders;
+	std::vector< std::shared_ptr<Tetrahedron> > tetrahedrons;
 };
 
 #endif

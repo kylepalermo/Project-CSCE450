@@ -37,6 +37,9 @@ shared_ptr<Program> prog;
 shared_ptr<Program> progSimple;
 shared_ptr<Scene> scene;
 
+// TODO: dot product with tris and also area
+// TODO: mentioned remeshing
+
 // https://stackoverflow.com/questions/41470942/stop-infinite-loop-in-different-thread
 std::atomic<bool> stop_flag;
 
@@ -62,6 +65,15 @@ static void char_callback(GLFWwindow *window, unsigned int key)
 			break;
 		case 'r':
 			scene->reset();
+			break;
+		case '0':
+			scene->setHeldObject(NONE, camera);
+			break;
+		case '1':
+			scene->setHeldObject(SPHERE, camera);
+			break;
+		case '2':
+			scene->setHeldObject(TETRAHEDRON, camera);
 			break;
 	}
 }

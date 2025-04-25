@@ -82,11 +82,6 @@ void Scene::load(const string &RESOURCE_DIR)
 	sphere->r = 0.1;
 	sphere->x = Vector3d(0.0, 0.2, 0.0);
 
-	auto heldSphere = make_shared<Particle>(sphereShape);
-	spheres.push_back(heldSphere);
-	heldSphere->r = 0.1;
-	heldSphere->x = Vector3d(-100.0, -100.0, -100.0); // Somewhere arbitrary
-
 	auto ground = make_shared<Plane>(planeShape);
 	planes.push_back(ground);
 
@@ -96,8 +91,7 @@ void Scene::load(const string &RESOURCE_DIR)
 	flagpole->h = 1.1;
 	flagpole->x = Vector3d(-1.975, 0.0, 0.0);
 
-	auto testTetrahedron = make_shared<Tetrahedron>(tetrahedronShape);
-	tetrahedrons.push_back(testTetrahedron);
+	heldObject = NONE;
 }
 
 void Scene::init()
@@ -138,13 +132,22 @@ void Scene::step(const std::shared_ptr<Camera> camera)
 	t += h;
 	
 	// Move the sphere
-	if(spheres.size() >= 2) {
-		auto s = spheres.at(0);
-		s->x(2) = 0.5 * sin(0.5*t);
+	
+	auto s = spheres.at(0);
+	s->x(2) = 0.5 * sin(0.5*t);
 
-		auto heldSphere = spheres.at(1);
+	switch (heldObject) {
+	case SPHERE: {
+		auto heldSphere = spheres.back();
 		glm::vec3 cameraTranslation = camera->getTranslation() + normalize(camera->getForward());
 		heldSphere->x = Eigen::Vector3d(cameraTranslation.x, cameraTranslation.y, cameraTranslation.z);
+		break;
+	}
+	case TETRAHEDRON:
+		auto heldTetrahedron = tetrahedrons.back();
+		glm::vec3 cameraTranslation = camera->getTranslation() + normalize(camera->getForward());
+		heldTetrahedron->x[0] = Eigen::Vector3d(cameraTranslation.x, cameraTranslation.y, cameraTranslation.z);
+		break;
 	}
 	
 	// Update the wind
@@ -164,6 +167,41 @@ void Scene::step(const std::shared_ptr<Camera> camera)
 	for (shared_ptr<Cloth> cloth : cloths) {
 		cloth->step(h, grav, wind, spheres, planes, cylinders, tetrahedrons);
 	}
+}
+
+void Scene::setHeldObject(HeldObject heldObject, const std::shared_ptr<Camera> camera) {
+	if (this->heldObject == heldObject) {
+		return;
+	}
+	
+	switch (this->heldObject){
+	case SPHERE:
+		spheres.pop_back();
+		break;
+	case TETRAHEDRON:
+		tetrahedrons.pop_back();
+		break;
+	}
+
+	switch (heldObject) {
+	case SPHERE: {
+		auto heldSphere = make_shared<Particle>(sphereShape);
+		heldSphere->r = 0.1;
+		glm::vec3 cameraTranslation = camera->getTranslation() + normalize(camera->getForward());
+		heldSphere->x = Eigen::Vector3d(cameraTranslation.x, cameraTranslation.y, cameraTranslation.z);
+		spheres.push_back(heldSphere);
+		break;
+	}
+	case TETRAHEDRON: {
+		auto heldTetrahedron = make_shared<Tetrahedron>(tetrahedronShape);
+		glm::vec3 cameraTranslation = camera->getTranslation() + normalize(camera->getForward());
+		heldTetrahedron->x[0] = Eigen::Vector3d(cameraTranslation.x, cameraTranslation.y, cameraTranslation.z);
+		tetrahedrons.push_back(heldTetrahedron);
+		break;
+	}
+	}
+
+	this->heldObject = heldObject;
 }
 
 void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const
