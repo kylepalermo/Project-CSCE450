@@ -11,18 +11,34 @@
 
 #include "Plane.h"
 #include "Cylinder.h"
+#include "Tetrahedron.h"
+#include "Spring.h"
 
 class Particle;
-class Spring;
 class MatrixStack;
 class Program;
 
-struct TriangleSprings {
+struct Tri {
+	int index0, index1, index2;
+	std::shared_ptr<Particle> vertexParticles[3];
 	std::shared_ptr<Spring> edgeSprings[3];
+	bool broken;
+	bool getBroken(){
+		if (broken) {
+			return true;
+		}
+
+		if (edgeSprings[0]->broken || edgeSprings[1]->broken || edgeSprings[2]->broken) {
+			broken = true;
+			return true;
+		}
+
+		return false;
+	}
 };
 
-struct QuadSprings {
-	TriangleSprings triangleSprings[2];
+struct Quad {
+	Tri tris[2];
 };
 
 class Cloth
@@ -51,7 +67,8 @@ public:
 		const Eigen::Vector3d &wind, 
 		const std::vector< std::shared_ptr<Particle> > spheres, 
 		const std::vector< std::shared_ptr<Plane> > planes,
-		const std::vector< std::shared_ptr<Cylinder> > cylinders
+		const std::vector< std::shared_ptr<Cylinder> > cylinders,
+		const std::vector< std::shared_ptr<Tetrahedron> > tetrahedrons
 	);
 	
 	void init();
@@ -62,7 +79,7 @@ private:
 	int cols;
 	std::vector< std::shared_ptr<Particle> > particles;
 	std::vector< std::shared_ptr<Spring> > springs;
-	std::vector< std::vector<QuadSprings> > cellSprings;
+	std::vector< std::vector<Quad> > cells;
 	
 	std::vector<unsigned int> eleBuf;
 	std::vector<float> posBuf;

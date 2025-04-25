@@ -73,6 +73,9 @@ void Scene::load(const string &RESOURCE_DIR)
 
 	cylinderShape = make_shared<Shape>();
 	cylinderShape->loadMesh(RESOURCE_DIR + "cylinder.obj");
+
+	tetrahedronShape = make_shared<Shape>();
+	tetrahedronShape->loadMesh(RESOURCE_DIR + "tetrahedron.obj");
 	
 	auto sphere = make_shared<Particle>(sphereShape);
 	spheres.push_back(sphere);
@@ -92,6 +95,9 @@ void Scene::load(const string &RESOURCE_DIR)
 	flagpole->r = 0.025;
 	flagpole->h = 1.1;
 	flagpole->x = Vector3d(-1.975, 0.0, 0.0);
+
+	auto testTetrahedron = make_shared<Tetrahedron>(tetrahedronShape);
+	tetrahedrons.push_back(testTetrahedron);
 }
 
 void Scene::init()
@@ -99,6 +105,7 @@ void Scene::init()
 	sphereShape->init();
 	planeShape->init();
 	cylinderShape->init();
+	tetrahedronShape->init();
 	for (shared_ptr<Cloth> cloth : cloths) {
 		cloth->init();
 	}
@@ -155,7 +162,7 @@ void Scene::step(const std::shared_ptr<Camera> camera)
 
 	// Simulate the cloths
 	for (shared_ptr<Cloth> cloth : cloths) {
-		cloth->step(h, grav, wind, spheres, planes, cylinders);
+		cloth->step(h, grav, wind, spheres, planes, cylinders, tetrahedrons);
 	}
 }
 
@@ -170,6 +177,9 @@ void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) con
 	}
 	for (auto c : cylinders) {
 		c->draw(MV, prog);
+	}
+	for (auto t : tetrahedrons) {
+		t->draw(MV, prog);
 	}
 	for (shared_ptr<Cloth> cloth : cloths) {
 		cloth->draw(MV, prog);

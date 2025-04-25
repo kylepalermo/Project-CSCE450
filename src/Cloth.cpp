@@ -12,6 +12,8 @@
 #include "Program.h"
 #include "GLSL.h"
 
+// when creating 3d softbodies, i might try to allow arbitrary meshes to be loaded
+
 using namespace std;
 using namespace Eigen;
 
@@ -35,7 +37,7 @@ Cloth::Cloth(int rows, int cols,
 	this->rows = rows;
 	this->cols = cols;
 
-	cellSprings.resize(rows - 1, vector<QuadSprings>(cols - 1));
+	cells.resize(rows - 1, vector<Quad>(cols - 1));
 	
 	// Create particles
 	int nVerts = rows*cols; // Total number of vertices
@@ -78,10 +80,10 @@ Cloth::Cloth(int rows, int cols,
 			);
 			springs.push_back(spring);
 			if (i < rows - 1) {
-				cellSprings.at(i).at(j).triangleSprings[0].edgeSprings[0] = spring;
+				cells.at(i).at(j).tris[0].edgeSprings[0] = spring;
 			}
 			if (i > 0) {
-				cellSprings.at(i - 1).at(j).triangleSprings[1].edgeSprings[0] = spring;
+				cells.at(i - 1).at(j).tris[1].edgeSprings[0] = spring;
 			}
 		}
 	}
@@ -96,10 +98,10 @@ Cloth::Cloth(int rows, int cols,
 			);
 			springs.push_back(spring);
 			if (j < rows - 1) {
-				cellSprings.at(i).at(j).triangleSprings[0].edgeSprings[1] = spring;
+				cells.at(i).at(j).tris[0].edgeSprings[1] = spring;
 			}
 			if (j > 0) {
-				cellSprings.at(i).at(j - 1).triangleSprings[1].edgeSprings[1] = spring;
+				cells.at(i).at(j - 1).tris[1].edgeSprings[1] = spring;
 			}
 		}
 	}
@@ -119,8 +121,8 @@ Cloth::Cloth(int rows, int cols,
 				alpha
 			);
 			springs.push_back(spring2);
-			cellSprings.at(i).at(j).triangleSprings[0].edgeSprings[2] = spring2;
-			cellSprings.at(i).at(j).triangleSprings[1].edgeSprings[2] = spring2;
+			cells.at(i).at(j).tris[0].edgeSprings[2] = spring2;
+			cells.at(i).at(j).tris[1].edgeSprings[2] = spring2;
 		}
 	}
 
@@ -269,13 +271,15 @@ void Cloth::updatePosNor()
 	}
 }
 
+// TODO: can rewrite this to take better advantage of tri struct. be careful not
+// to add to much compute when doing so.
 void Cloth::updateEle() {
 	eleBuf.clear();
 	for (int i = 0; i < rows - 1; i++) {
 		for (int j = 0; j < cols - 1; j++) {
 			bool brokenEdge = false;
 			for (int edge = 0; edge < 3; edge++) {
-				if (cellSprings.at(i).at(j).triangleSprings[0].edgeSprings[edge]->broken) {
+				if (cells.at(i).at(j).tris[0].edgeSprings[edge]->broken) {
 					brokenEdge = true;
 					break;
 				}
@@ -288,7 +292,7 @@ void Cloth::updateEle() {
 
 			brokenEdge = false;
 			for (int edge = 0; edge < 3; edge++) {
-				if (cellSprings.at(i).at(j).triangleSprings[1].edgeSprings[edge]->broken) {
+				if (cells.at(i).at(j).tris[1].edgeSprings[edge]->broken) {
 					brokenEdge = true;
 					break;
 				}
@@ -308,7 +312,8 @@ void Cloth::step(
 	const Eigen::Vector3d &wind,
 	const std::vector< std::shared_ptr<Particle> > spheres,
 	const std::vector< std::shared_ptr<Plane> > planes,
-	const std::vector< std::shared_ptr<Cylinder> > cylinders
+	const std::vector< std::shared_ptr<Cylinder> > cylinders,
+	const std::vector< std::shared_ptr<Tetrahedron> > tetrahedrons
 ) {
 	for (shared_ptr<Particle> particle : particles) {
 		if (particle->fixed) {
@@ -401,6 +406,29 @@ void Cloth::step(
 					// Move beside cylinder
 					particle->x = particle->x - d.normalized() * radialDistance;
 				}
+			}
+		}
+	}
+
+	for (shared_ptr<Tetrahedron> tetrahedron : tetrahedrons) {
+		std::array<Face, 4> faces = tetrahedron->getFaces();
+		for (shared_ptr<Particle> particle : particles) {
+			if (particle->fixed) {
+				continue;
+			}
+			
+			double constexpr negInfinity = -std::numeric_limits<double>::infinity();
+			double maxDistance = negInfinity;
+			int maxDistanceIndex = -1;
+			for (int i = 0; i < faces.size(); i++) {
+				double distance = (particle->x - faces[i].x).dot(faces[i].n) - particle->r;
+				if (distance > maxDistance) {
+					maxDistance = distance;
+					maxDistanceIndex = i;
+				}
+			}
+			if (maxDistance < 0.0) {
+				particle->x = particle->x - maxDistance * faces[maxDistanceIndex].n;
 			}
 		}
 	}
