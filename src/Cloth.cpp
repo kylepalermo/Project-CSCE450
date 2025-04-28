@@ -12,8 +12,6 @@
 #include "Program.h"
 #include "GLSL.h"
 
-// when creating 3d softbodies, i might try to allow arbitrary meshes to be loaded
-
 using namespace std;
 using namespace Eigen;
 

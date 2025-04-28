@@ -64,6 +64,20 @@ void Scene::load(const string &RESOURCE_DIR)
 	shared_ptr<Cloth> windCloth = make_shared<Cloth>(2 * rows, 2 * cols, x00, x01, x10, x11, mass, alpha, damping, pradius);
 	cloths.push_back(windCloth);
 
+	Vector3d x000(-1.0, -1.0, -1.0);
+	Vector3d x111(1.0, 1.0, 1.0);
+	shared_ptr<SoftBody> testBody = make_shared<SoftBody>(
+		rows,
+		cols,
+		cols,
+		x000,
+		x111,
+		mass,
+		alpha,
+		damping,
+		pradius
+	);
+	softBodies.push_back(testBody);
 	
 	sphereShape = make_shared<Shape>();
 	sphereShape->loadMesh(RESOURCE_DIR + "sphere2.obj");
@@ -103,6 +117,9 @@ void Scene::init()
 	for (shared_ptr<Cloth> cloth : cloths) {
 		cloth->init();
 	}
+	for (shared_ptr<SoftBody> softBody : softBodies) {
+		softBody->init();
+	}
 	srand(time(0));
 }
 
@@ -114,6 +131,9 @@ void Scene::tare()
 	for (shared_ptr<Cloth> cloth : cloths) {
 		cloth->tare();
 	}
+	for (shared_ptr<SoftBody> softBody : softBodies) {
+		softBody->tare();
+	}
 }
 
 void Scene::reset()
@@ -124,6 +144,9 @@ void Scene::reset()
 	}
 	for (shared_ptr<Cloth> cloth : cloths) {
 		cloth->reset();
+	}
+	for (shared_ptr<SoftBody> softBody : softBodies) {
+		softBody->reset();
 	}
 }
 
@@ -145,8 +168,22 @@ void Scene::step(const std::shared_ptr<Camera> camera)
 	}
 	case TETRAHEDRON:
 		auto heldTetrahedron = tetrahedrons.back();
-		glm::vec3 cameraTranslation = camera->getTranslation() + normalize(camera->getForward());
-		heldTetrahedron->x[0] = Eigen::Vector3d(cameraTranslation.x, cameraTranslation.y, cameraTranslation.z);
+
+		glm::vec3 forward = normalize(camera->getForward());
+		glm::vec3 up(0.0f, 1.0f, 0.0f);
+		glm::vec3 right = normalize(cross(forward, up));
+		up = normalize(cross(right, forward));
+		glm::vec3 translation = camera->getTranslation();
+
+		glm::vec3 p0 = translation + forward * 1.5f;
+		glm::vec3 p1 = translation + forward + right * 0.1f - up * 0.1f;
+		glm::vec3 p2 = translation + forward + right * 0.2f - up * 0.1f;
+		glm::vec3 p3 = translation + forward + right * 0.15f - up * 0.25f;
+		
+		heldTetrahedron->x[0] = Eigen::Vector3d(p0.x, p0.y, p0.z);
+		heldTetrahedron->x[1] = Eigen::Vector3d(p1.x, p1.y, p1.z);
+		heldTetrahedron->x[2] = Eigen::Vector3d(p2.x, p2.y, p2.z);
+		heldTetrahedron->x[3] = Eigen::Vector3d(p3.x, p3.y, p3.z);
 		break;
 	}
 	
@@ -167,6 +204,9 @@ void Scene::step(const std::shared_ptr<Camera> camera)
 	for (shared_ptr<Cloth> cloth : cloths) {
 		cloth->step(h, grav, wind, spheres, planes, cylinders, tetrahedrons);
 	}
+	for (shared_ptr<SoftBody> softBody : softBodies) {
+		softBody->step(h, grav, wind, spheres, planes, cylinders, tetrahedrons);
+	}
 }
 
 void Scene::setHeldObject(HeldObject heldObject, const std::shared_ptr<Camera> camera) {
@@ -185,6 +225,7 @@ void Scene::setHeldObject(HeldObject heldObject, const std::shared_ptr<Camera> c
 
 	switch (heldObject) {
 	case SPHERE: {
+		// will replace this with the code in step() once it works
 		auto heldSphere = make_shared<Particle>(sphereShape);
 		heldSphere->r = 0.1;
 		glm::vec3 cameraTranslation = camera->getTranslation() + normalize(camera->getForward());
@@ -221,5 +262,8 @@ void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) con
 	}
 	for (shared_ptr<Cloth> cloth : cloths) {
 		cloth->draw(MV, prog);
+	}
+	for (shared_ptr<SoftBody> softBody : softBodies) {
+		softBody->draw(MV, prog);
 	}
 }

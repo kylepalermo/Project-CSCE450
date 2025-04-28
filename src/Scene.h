@@ -13,6 +13,8 @@
 #include "Plane.h"
 #include "Cylinder.h"
 #include "Tetrahedron.h"
+#include "SoftBody.h"
+
 
 class Cloth;
 class Particle;
@@ -55,13 +57,16 @@ private:
 	int windN;
 	int windI;
 
-	HeldObject heldObject;
+	HeldObject heldObject; // not the best naming
 	
 	std::shared_ptr<Shape> sphereShape;
 	std::shared_ptr<Shape> planeShape;
 	std::shared_ptr<Shape> cylinderShape;
 	std::shared_ptr<Shape> tetrahedronShape;
+
 	std::vector< std::shared_ptr<Cloth> > cloths;
+	std::vector< std::shared_ptr<SoftBody> > softBodies;
+
 	std::vector< std::shared_ptr<Particle> > spheres;
 	std::vector< std::shared_ptr<Plane> > planes;
 	std::vector< std::shared_ptr<Cylinder> > cylinders;
