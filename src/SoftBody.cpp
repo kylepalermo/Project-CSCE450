@@ -4,8 +4,8 @@ using namespace std;
 using namespace Eigen;
 
 SoftBody::SoftBody(int rows, int cols, int tubes,
-	const Eigen::Vector3d &x000,
-	const Eigen::Vector3d &x111,
+	const Vector3d &x000,
+	const Vector3d &x111,
 	double mass,
 	double alpha,
 	double damping,
@@ -26,7 +26,7 @@ SoftBody::SoftBody(int rows, int cols, int tubes,
 		rows - 1, 
 		vector< vector<Hexa>>(
 			cols - 1, 
-			std::vector<Hexa>(
+			vector<Hexa>(
 				tubes - 1
 			)
 		)
@@ -203,17 +203,40 @@ void SoftBody::updatePosNor() {
 	}
 
 	// Normal
-	// placeholder, will calculate later
-	for (int i = 0; i < rows; i++) {
-		for (int j = 0; j < cols; j++) {
-			for (int k = 0; k < tubes; k++) {
-				int index = i * cols * tubes + j * tubes + k;
-				Vector3d n(1.0, 1.0, 1.0);
-				norBuf[3 * index + 0] = float(n(0));
-				norBuf[3 * index + 1] = float(n(1));
-				norBuf[3 * index + 2] = float(n(2));
+	vector<Vector3d> normalAccumulator(rows * cols * tubes, Vector3d::Zero());
+	for (int i = 0; i < rows - 1; i++) {
+		for (int j = 0; j < cols - 1; j++) {
+			for (int k = 0; k < tubes - 1; k++) {
+				Hexa &H = cells[i][j][k];
+				for (int q = 0; q < 6; q++) {
+					for (int t = 0; t < 2; t++) {
+						Tri &T = H.quads[q].tris[t];
+
+						int i0 = T.index0;
+						int i1 = T.index1;
+						int i2 = T.index2;
+
+						Vector3d &x0 = particles[i0]->x;
+						Vector3d &x1 = particles[i1]->x;
+						Vector3d &x2 = particles[i2]->x;
+
+						Vector3d triNormal = (x1 - x0).cross(x2 - x0);
+
+						normalAccumulator[i0] += triNormal;
+						normalAccumulator[i1] += triNormal;
+						normalAccumulator[i2] += triNormal;
+					}
+				}
 			}
 		}
+	}
+
+	for (int i = 0; i < rows * cols * tubes; i++) {
+		Vector3d n = normalAccumulator[i].normalized();
+
+		norBuf[3 * i + 0] = float(n.x());
+		norBuf[3 * i + 1] = float(n.y());
+		norBuf[3 * i + 2] = float(n.z());
 	}
 }
 
