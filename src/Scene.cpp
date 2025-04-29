@@ -64,7 +64,7 @@ void Scene::load(const string &RESOURCE_DIR)
 	shared_ptr<Cloth> windCloth = make_shared<Cloth>(2 * rows, 2 * cols, x00, x01, x10, x11, mass, alpha, damping, pradius);
 	cloths.push_back(windCloth);
 
-	Vector3d x000(-1.0, -1.0, -1.0);
+	Vector3d x000(0.5, 0.5, 0.5);
 	Vector3d x111(1.0, 1.0, 1.0);
 	shared_ptr<SoftBody> testBody = make_shared<SoftBody>(
 		rows,
@@ -72,9 +72,9 @@ void Scene::load(const string &RESOURCE_DIR)
 		cols,
 		x000,
 		x111,
-		mass,
+		10.0,
 		alpha,
-		damping,
+		damping * 5.0,
 		pradius
 	);
 	softBodies.push_back(testBody);

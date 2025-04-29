@@ -57,9 +57,16 @@ SoftBody::SoftBody(int rows, int cols, int tubes,
 				p->r = pradius;
 				p->d = damping;
 
-				// necessary to anchor while friction is not yet implemented
-				if (i == 0 && j == 0 && k == 0) {
+				// necessary to anchor at times while friction is not yet implemented
+				if (false &&
+					(i == 0 || i == rows - 1) && 
+					(j == 0 || j == cols - 1) && 
+					(k == 0 || k == tubes - 1)
+				) {
 					p->fixed = true;
+				}
+				else {
+					p->fixed = false;
 				}
 				
 				particles.push_back(p);
@@ -153,6 +160,151 @@ SoftBody::SoftBody(int rows, int cols, int tubes,
 		}
 	}
 
+	// TODO: not done yet
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			for (int k = 0; k < tubes; k++) {
+				int index0 = i * cols * tubes + j * tubes + k;
+
+				// Structure
+				// x
+				if (i < rows - 1) {
+					int index1 = (i + 1) * cols * tubes + j * tubes + k;
+					springs.push_back(make_shared<Spring>(
+						particles[index0],
+						particles[index1],
+						alpha
+					));
+				}
+				// y
+				if (j < cols - 1) {
+					int index1 = i * cols * tubes + (j + 1) * tubes + k;
+					springs.push_back(make_shared<Spring>(
+						particles[index0],
+						particles[index1],
+						alpha
+					));
+				}
+				// z
+				if (k < tubes - 1) {
+					int index1 = i * cols * tubes + j * tubes + (k + 1);
+					springs.push_back(make_shared<Spring>(
+						particles[index0],
+						particles[index1],
+						alpha
+					));
+				}
+				// Shear
+				// xy
+				if (i < rows - 1 && j < cols - 1) {
+					int index1 = (i + 1) * cols * tubes + (j + 1) * tubes + k;
+					springs.push_back(make_shared<Spring>(
+						particles[index0],
+						particles[index1],
+						alpha
+					));
+					int index2 = (i + 1) * cols * tubes + j * tubes + k;
+					int index3 = i * cols * tubes + (j + 1) * tubes + k;
+					springs.push_back(make_shared<Spring>(
+						particles[index2],
+						particles[index3],
+						alpha
+					));
+				}
+				// yz
+				if (j < cols - 1 && k < tubes - 1) {
+					int index1 = i * cols * tubes + (j + 1) * tubes + (k + 1);
+					springs.push_back(make_shared<Spring>(
+						particles[index0],
+						particles[index1],
+						alpha
+					));
+					int index2 = i * cols * tubes + (j + 1) * tubes + k;
+					int index3 = i * cols * tubes + j * tubes + (k + 1);
+					springs.push_back(make_shared<Spring>(
+						particles[index2],
+						particles[index3],
+						alpha
+					));
+				}
+				// xz
+				if (i < rows - 1 && k < tubes - 1) {
+					int index1 = (i + 1) * cols * tubes + j * tubes + (k + 1);
+					springs.push_back(make_shared<Spring>(
+						particles[index0],
+						particles[index1],
+						alpha
+					));
+					int index2 = (i + 1) * cols * tubes + j * tubes + k;
+					int index3 = i * cols * tubes + j * tubes + (k + 1);
+					springs.push_back(make_shared<Spring>(
+						particles[index2],
+						particles[index3],
+						alpha
+					));
+				}
+				// xyz
+				if (i < rows - 1 && j < cols - 1 && k < tubes - 1) {
+					int index1 = (i + 1) * cols * tubes + (j + 1) * tubes + (k + 1);
+					springs.push_back(make_shared<Spring>(
+						particles[index0],
+						particles[index1],
+						alpha
+					));
+					int index2 = (i + 1) * cols * tubes + j * tubes + k;
+					int index3 = i * cols * tubes + (j + 1) * tubes + (k + 1);
+					springs.push_back(make_shared<Spring>(
+						particles[index2],
+						particles[index3],
+						alpha
+					));
+					int index4 = i * cols * tubes + (j + 1) * tubes + k;
+					int index5 = (i + 1) * cols * tubes + j * tubes + (k + 1);
+					springs.push_back(make_shared<Spring>(
+						particles[index4],
+						particles[index5],
+						alpha
+					));
+					int index6 = i * cols * tubes + j * tubes + (k + 1);
+					int index7 = (i + 1) * cols * tubes + (j + 1) * tubes + k;
+					springs.push_back(make_shared<Spring>(
+						particles[index6],
+						particles[index7],
+						alpha
+					));
+				}
+				// Bend
+				// x
+				if (i < rows - 2) {
+					int index1 = (i + 2) * cols * tubes + j * tubes + k;
+					springs.push_back(make_shared<Spring>(
+						particles[index0],
+						particles[index1],
+						alpha
+					));
+				}
+				// y
+				if (j < cols - 2) {
+					int index1 = i * cols * tubes + (j + 2) * tubes + k;
+					springs.push_back(make_shared<Spring>(
+						particles[index0],
+						particles[index1],
+						alpha
+					));
+				}
+				// z
+				if (k < tubes - 2) {
+					int index1 = i * cols * tubes + j * tubes + (k + 2);
+					springs.push_back(make_shared<Spring>(
+						particles[index0],
+						particles[index1],
+						alpha
+					));
+				}
+			}
+		}
+	}
+
 	posBuf.clear();
 	norBuf.clear();
 	texBuf.clear();
@@ -203,6 +355,7 @@ void SoftBody::updatePosNor() {
 	}
 
 	// Normal
+	// Need to work on this later
 	vector<Vector3d> normalAccumulator(rows * cols * tubes, Vector3d::Zero());
 	for (int i = 0; i < rows - 1; i++) {
 		for (int j = 0; j < cols - 1; j++) {
@@ -269,7 +422,131 @@ void SoftBody::step(
 	const std::vector< std::shared_ptr<Cylinder> > cylinders,
 	const std::vector< std::shared_ptr<Tetrahedron> > tetrahedrons
 ) {
-	// TODO
+	for (shared_ptr<Particle> particle : particles) {
+		if (particle->fixed) {
+			particle->v = particle->v0;
+			continue;
+		}
+
+		Vector3d particleForce = particle->m * grav - particle->d * particle->v + wind;
+		particle->v += (h / particle->m) * particleForce;
+		particle->p = particle->x;
+		particle->x += h * particle->v;
+	}
+
+	for (int i = 0; i < 10; i++) {
+		for (shared_ptr<Spring> spring : springs) {
+			/*
+			if (spring->broken) {
+				continue;
+			}
+			*/
+			Vector3d deltax = spring->p1->x - spring->p0->x;
+			double l = deltax.norm();
+			/*
+			if (l >= spring->L * 2.5) {
+				spring->broken = true;
+				continue;
+			}
+			*/
+			double C = l - spring->L;
+			Vector3d deltaC0 = -deltax / l;
+			Vector3d deltaC1 = deltax / l;
+
+			double w0 = 1.0 / spring->p0->m;
+			double w1 = 1.0 / spring->p1->m;
+			double lambda = -C / (w0 + w1 + spring->alpha / (h * h));
+
+			if (!spring->p0->fixed) {
+				spring->p0->x += lambda * w0 * deltaC0;
+			}
+			if (!spring->p1->fixed) {
+				spring->p1->x += lambda * w1 * deltaC1;
+			}
+		}
+	}
+
+	for (shared_ptr<Particle> sphere : spheres) {
+		for (shared_ptr<Particle> particle : particles) {
+			if (particle->fixed) {
+				continue;
+			}
+
+			if ((particle->x - sphere->x).norm() < particle->r + sphere->r) {
+				particle->x = (sphere->r + particle->r) * (particle->x - sphere->x).normalized() + sphere->x;
+			}
+		}
+	}
+
+	for (shared_ptr<Plane> plane : planes) {
+		for (shared_ptr<Particle> particle : particles) {
+			if (particle->fixed) {
+				continue;
+			}
+
+			double distance = (particle->x - plane->x).dot(plane->n);
+			if (distance < particle->r) {
+				particle->x = particle->x - plane->n * (distance - particle->r);
+			}
+		}
+	}
+
+	for (shared_ptr<Cylinder> cylinder : cylinders) {
+		for (shared_ptr<Particle> particle : particles) {
+			if (particle->fixed) {
+				continue;
+			}
+
+			double topDistance = (particle->x - (cylinder->x + cylinder->h * cylinder->axis)).dot(cylinder->axis) - particle->r;
+			double bottomDistance = (particle->x - cylinder->x).dot(-cylinder->axis) - particle->r;
+
+			Vector3d d = particle->x - cylinder->x;
+			d = d - (d.dot(cylinder->axis)) * cylinder->axis;
+			double radialDistance = d.norm() - cylinder->r - particle->r;
+
+			if (topDistance < 0.0 && bottomDistance < 0.0 && radialDistance < 0.0) {
+				if (topDistance > bottomDistance && topDistance > radialDistance) {
+					// Move above cylinder
+					particle->x = particle->x - cylinder->axis * topDistance;
+				}
+				else if (bottomDistance > radialDistance) {
+					// Move below cylinder
+					particle->x = particle->x + cylinder->axis * bottomDistance;
+				}
+				else {
+					// Move beside cylinder
+					particle->x = particle->x - d.normalized() * radialDistance;
+				}
+			}
+		}
+	}
+
+	for (shared_ptr<Tetrahedron> tetrahedron : tetrahedrons) {
+		std::array<Face, 4> faces = tetrahedron->getFaces();
+		for (shared_ptr<Particle> particle : particles) {
+			if (particle->fixed) {
+				continue;
+			}
+
+			double constexpr negInfinity = -std::numeric_limits<double>::infinity();
+			double maxDistance = negInfinity;
+			int maxDistanceIndex = -1;
+			for (int i = 0; i < faces.size(); i++) {
+				double distance = (particle->x - faces[i].x).dot(faces[i].n) - particle->r;
+				if (distance > maxDistance) {
+					maxDistance = distance;
+					maxDistanceIndex = i;
+				}
+			}
+			if (maxDistance < 0.0) {
+				particle->x = particle->x - maxDistance * faces[maxDistanceIndex].n;
+			}
+		}
+	}
+
+	for (shared_ptr<Particle> particle : particles) {
+		particle->v = (1 / h) * (particle->x - particle->p);
+	}
 }
 
 void SoftBody::init()
