@@ -14,6 +14,7 @@
 #include "Cylinder.h"
 #include "Tetrahedron.h"
 #include "Spring.h"
+#include "Volume.h"
 #include "Tri.h"
 
 class SoftBody {
@@ -25,6 +26,7 @@ class SoftBody {
 
 	std::vector< std::shared_ptr<Particle> > particles;
 	std::vector< std::shared_ptr<Spring> > springs;
+	std::vector< std::shared_ptr<Volume> > volumes;
 	std::vector< std::vector< std::vector<Hexa> > > cells;
 
 	std::vector<unsigned int> eleBuf;
