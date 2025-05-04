@@ -64,7 +64,7 @@ public:
 	);
 
 	void init();
-	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> p);
+	void draw(std::shared_ptr<MatrixStack> M, const std::shared_ptr<Program> p);
 };
 
 

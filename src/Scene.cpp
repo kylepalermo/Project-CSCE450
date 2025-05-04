@@ -245,25 +245,25 @@ void Scene::setHeldObject(HeldObject heldObject, const std::shared_ptr<Camera> c
 	this->heldObject = heldObject;
 }
 
-void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const
+void Scene::draw(shared_ptr<MatrixStack> M, const shared_ptr<Program> prog) const
 {
 	glUniform3fv(prog->getUniform("kdFront"), 1, Vector3f(1.0, 1.0, 1.0).data());
 	for(auto s : spheres) {
-		s->draw(MV, prog);
+		s->draw(M, prog);
 	}
 	for (auto p : planes) {
-		p->draw(MV, prog);
+		p->draw(M, prog);
 	}
 	for (auto c : cylinders) {
-		c->draw(MV, prog);
+		c->draw(M, prog);
 	}
 	for (auto t : tetrahedrons) {
-		t->draw(MV, prog);
+		t->draw(M, prog);
 	}
 	for (shared_ptr<Cloth> cloth : cloths) {
-		cloth->draw(MV, prog);
+		cloth->draw(M, prog);
 	}
 	for (shared_ptr<SoftBody> softBody : softBodies) {
-		softBody->draw(MV, prog);
+		softBody->draw(M, prog);
 	}
 }

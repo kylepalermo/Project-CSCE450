@@ -21,9 +21,9 @@ Tetrahedron::Tetrahedron(const std::shared_ptr<Shape> shape) :
 	} };
 }
 
-void Tetrahedron::draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const {
+void Tetrahedron::draw(std::shared_ptr<MatrixStack> M, const std::shared_ptr<Program> prog) const {
 	if (tetrahedron) {
-		MV->pushMatrix();
+		M->pushMatrix();
 		
 		glm::vec3 p0(x[0].x(), x[0].y(), x[0].z());
 		glm::vec3 p1(x[1].x(), x[1].y(), x[1].z());
@@ -36,11 +36,11 @@ void Tetrahedron::draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Pr
 		transform[2] = glm::vec4(p3 - p0, 0.0f);
 		transform[3] = glm::vec4(p0, 1.0f);
 		
-		MV->multMatrix(transform);
+		M->multMatrix(transform);
 		
-		glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, glm::value_ptr(M->topMatrix()));
 		tetrahedron->draw(prog);
-		MV->popMatrix();
+		M->popMatrix();
 	}
 }
 

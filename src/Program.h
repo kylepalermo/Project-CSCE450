@@ -25,6 +25,13 @@ public:
 	virtual void bind();
 	virtual void unbind();
 
+	// Framebuffer
+	bool initFrameBuffer(int width, int height, bool depthOnly);
+	void bindFrameBuffer();
+	void unbindFrameBuffer();
+	GLuint getTextureID() const { return textureID; }
+	
+
 	void addAttribute(const std::string &name);
 	void addUniform(const std::string &name);
 	GLint getAttribute(const std::string &name) const;
@@ -33,6 +40,9 @@ public:
 protected:
 	std::string vShaderName;
 	std::string fShaderName;
+
+	GLuint framebufferID;
+	GLuint textureID;
 	
 private:
 	GLuint pid;

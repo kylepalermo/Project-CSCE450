@@ -22,7 +22,7 @@ public:
 	virtual ~Particle();
 	void tare();
 	void reset();
-	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> p) const;
+	void draw(std::shared_ptr<MatrixStack> M, const std::shared_ptr<Program> p) const;
 	
 	double r; // radius
 	double m; // mass

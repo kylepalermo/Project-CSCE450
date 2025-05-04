@@ -23,7 +23,7 @@ class Plane {
 	const std::shared_ptr<Shape> plane;
 public:
 	Plane(const std::shared_ptr<Shape> shape);
-	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const;
+	void draw(std::shared_ptr<MatrixStack> M, const std::shared_ptr<Program> prog) const;
 	
 	Eigen::Vector3d x; // position
 	Eigen::Vector3d n; // normal

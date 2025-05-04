@@ -27,7 +27,7 @@ class Tetrahedron {
 	const std::shared_ptr<Shape> tetrahedron;
 public:
 	Tetrahedron(const std::shared_ptr<Shape> shape);
-	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const;
+	void draw(std::shared_ptr<MatrixStack> M, const std::shared_ptr<Program> prog) const;
 
 	std::array<Eigen::Vector3d, 4> x;
 	std::array<std::array<int, 3>, 4 > faceIndices;

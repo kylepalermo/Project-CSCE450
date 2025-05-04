@@ -52,14 +52,16 @@ void Particle::reset()
 	v = v0;
 }
 
-void Particle::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const
+void Particle::draw(shared_ptr<MatrixStack> M, const shared_ptr<Program> prog) const
 {
 	if(sphere) {
-		MV->pushMatrix();
-		MV->translate(float(x(0)), float(x(1)), float(x(2)));
-		MV->scale(float(r));
-		glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
+		glUniform3f(prog->getUniform("kdFront"), 0.8f, 0.8f, 0.8f);
+		glUniform3f(prog->getUniform("kdBack"), 0.0f, 0.0f, 0.0f);
+		M->pushMatrix();
+		M->translate(float(x(0)), float(x(1)), float(x(2)));
+		M->scale(float(r));
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, glm::value_ptr(M->topMatrix()));
 		sphere->draw(prog);
-		MV->popMatrix();
+		M->popMatrix();
 	}
 }

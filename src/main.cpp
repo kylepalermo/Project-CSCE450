@@ -34,11 +34,11 @@ string RESOURCE_DIR = ""; // Where the resources are loaded from
 
 shared_ptr<Camera> camera;
 shared_ptr<Program> prog;
-shared_ptr<Program> progSimple;
+shared_ptr<Program> depthProg;
 shared_ptr<Scene> scene;
 
 // TODO: dot product with tris and also area
-// TODO: mentioned remeshing
+// TODO: make sure shear and nonuniform scale is not used, mvit is not available currently
 
 // https://stackoverflow.com/questions/41470942/stop-infinite-loop-in-different-thread
 std::atomic<bool> stop_flag;
@@ -114,26 +114,31 @@ static void init()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	progSimple = make_shared<Program>();
-	progSimple->setShaderNames(RESOURCE_DIR + "simple_vert.glsl", RESOURCE_DIR + "simple_frag.glsl");
-	progSimple->setVerbose(true); // Set this to true when debugging.
-	progSimple->init();
-	progSimple->addUniform("P");
-	progSimple->addUniform("MV");
-	progSimple->setVerbose(false);
-	
 	prog = make_shared<Program>();
 	prog->setVerbose(true); // Set this to true when debugging.
 	prog->setShaderNames(RESOURCE_DIR + "phong_vert.glsl", RESOURCE_DIR + "phong_frag.glsl");
 	prog->init();
 	prog->addUniform("P");
-	prog->addUniform("MV");
+	prog->addUniform("V");
+	prog->addUniform("lightVP");
+	prog->addUniform("M");
 	prog->addUniform("kdFront");
 	prog->addUniform("kdBack");
+	prog->addUniform("lightPos");
+	prog->addUniform("shadowMap");
 	prog->addAttribute("aPos");
 	prog->addAttribute("aNor");
-	prog->addAttribute("aTex");
 	prog->setVerbose(false);
+
+	depthProg = make_shared<Program>();
+	depthProg->setShaderNames(RESOURCE_DIR + "depth_vert.glsl", RESOURCE_DIR + "depth_frag.glsl");
+	depthProg->init();
+	depthProg->addUniform("lightVP");
+	depthProg->addUniform("M");
+	depthProg->addAttribute("aPos");
+	depthProg->setVerbose(false);
+
+	depthProg->initFrameBuffer(8192, 8192, true);
 	
 	camera = make_shared<Camera>();
 	camera->setTranslation(glm::vec3(0.0f, 1.0f, -2.0f));
@@ -151,6 +156,35 @@ static void init()
 
 void render()
 {
+	// Pass 1
+	auto P = make_shared<MatrixStack>();
+	auto V = make_shared<MatrixStack>();
+	auto M = make_shared<MatrixStack>();
+
+	P->pushMatrix();
+	P->multMatrix(glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 1000.0f));
+	V->pushMatrix();
+	glm::vec3 lightTarget(0.0f, 0.0f, 0.0f);
+	glm::vec3 lightEye = lightTarget - 10.0f * glm::vec3(0.0f, -1.0f, -1.0f);
+	glm::vec3 lightUp(0.0f, 1.0f, 0.0f);
+	V->multMatrix(glm::lookAt(lightEye, lightTarget, lightUp));
+	M->pushMatrix();
+
+	glm::mat4 lightVP = P->topMatrix() * V->topMatrix();
+
+	depthProg->bindFrameBuffer();
+	glViewport(0, 0, 8192, 8192);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	depthProg->bind();
+	glUniformMatrix4fv(depthProg->getUniform("lightVP"), 1, GL_FALSE, glm::value_ptr(lightVP));
+	scene->draw(M, depthProg);
+	depthProg->unbind();
+	depthProg->unbindFrameBuffer();
+	P->popMatrix();
+	V->popMatrix();
+	M->popMatrix();
+
 	// Get current frame buffer size.
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
@@ -173,64 +207,24 @@ void render()
 	} else {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
-	
-	auto P = make_shared<MatrixStack>();
-	auto MV = make_shared<MatrixStack>();
-	
+
 	// Apply camera transforms
 	P->pushMatrix();
 	camera->applyProjectionMatrix(P);
-	MV->pushMatrix();
-	camera->applyViewMatrix(MV);
-
-	// Draw grid
-	progSimple->bind();
-	glUniformMatrix4fv(progSimple->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
-	glUniformMatrix4fv(progSimple->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
-	glLineWidth(2.0f);
-	float x0 = -0.5f;
-	float x1 = 0.5f;
-	float z0 = -0.5f;
-	float z1 = 0.5f;
-	int gridSize = 10;
-	glLineWidth(1.0f);
-	glBegin(GL_LINES);
-	for(int i = 1; i < gridSize; ++i) {
-		if(i == gridSize/2) {
-			glColor3f(0.1f, 0.1f, 0.1f);
-		} else {
-			glColor3f(0.8f, 0.8f, 0.8f);
-		}
-		float x = x0 + i / (float)gridSize * (x1 - x0);
-		glVertex3f(x, 0.0f, z0);
-		glVertex3f(x, 0.0f, z1);
-	}
-	for(int i = 1; i < gridSize; ++i) {
-		if(i == gridSize/2) {
-			glColor3f(0.1f, 0.1f, 0.1f);
-		} else {
-			glColor3f(0.8f, 0.8f, 0.8f);
-		}
-		float z = z0 + i / (float)gridSize * (z1 - z0);
-		glVertex3f(x0, 0.0f, z);
-		glVertex3f(x1, 0.0f, z);
-	}
-	glEnd();
-	glColor3f(0.4f, 0.4f, 0.4f);
-	glBegin(GL_LINE_LOOP);
-	glVertex3f(x0, 0.0f, z0);
-	glVertex3f(x1, 0.0f, z0);
-	glVertex3f(x1, 0.0f, z1);
-	glVertex3f(x0, 0.0f, z1);
-	glEnd();
-	progSimple->unbind();
+	V->pushMatrix();
+	camera->applyViewMatrix(V);
+	M->pushMatrix();
 
 	// Draw scene
 	prog->bind();
 	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
-	MV->pushMatrix();
-	scene->draw(MV, prog);
-	MV->popMatrix();
+	glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, glm::value_ptr(V->topMatrix()));
+	glUniformMatrix4fv(prog->getUniform("lightVP"), 1, GL_FALSE, glm::value_ptr(lightVP));
+	lightEye = glm::vec3(M->topMatrix() * V->topMatrix() * glm::vec4(lightEye, 1.0f));
+	glUniform3fv(prog->getUniform("lightPos"), 1, glm::value_ptr(lightEye));
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, depthProg->getTextureID());
+	scene->draw(M, prog);
 	prog->unbind();
 	
 	//////////////////////////////////////////////////////
@@ -238,8 +232,9 @@ void render()
 	//////////////////////////////////////////////////////
 	
 	// Pop stacks
-	MV->popMatrix();
 	P->popMatrix();
+	V->popMatrix();
+	M->popMatrix();
 	
 	GLSL::checkError(GET_FILE_LINE);
 }

@@ -8,10 +8,10 @@ Cylinder::Cylinder(const std::shared_ptr<Shape> shape) :
 	cylinder(shape)
 {}
 
-void Cylinder::draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const {
+void Cylinder::draw(std::shared_ptr<MatrixStack> M, const std::shared_ptr<Program> prog) const {
 	if (cylinder) {
-		MV->pushMatrix();
-		MV->translate(float(x(0)), float(x(1)), float(x(2)));
+		M->pushMatrix();
+		M->translate(float(x(0)), float(x(1)), float(x(2)));
 		
 		Eigen::Vector3d up(0.0, 1.0, 0.0);
 		Eigen::Vector3d rotationAxis = up.cross(axis);
@@ -20,17 +20,17 @@ void Cylinder::draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Progr
 
 		if (rotationAxis.squaredNorm() < 1e-12) {
 			if (dotProduct < 0.0) {
-				MV->rotate(M_PI, glm::vec3(1.0f, 0.0f, 0.0f));
+				M->rotate(M_PI, glm::vec3(1.0f, 0.0f, 0.0f));
 			}
 		}
 		else {
 			rotationAxis.normalize();
-			MV->rotate(rotationAngle, glm::vec3(rotationAxis.x(), rotationAxis.y(), rotationAxis.z()));
+			M->rotate(rotationAngle, glm::vec3(rotationAxis.x(), rotationAxis.y(), rotationAxis.z()));
 		}
 
-		MV->scale(r, h, r);
-		glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
+		M->scale(r, h, r);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, glm::value_ptr(M->topMatrix()));
 		cylinder->draw(prog);
-		MV->popMatrix();
+		M->popMatrix();
 	}
 }

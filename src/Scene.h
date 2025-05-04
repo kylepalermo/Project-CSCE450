@@ -42,7 +42,7 @@ public:
 	void reset();
 	void step(const std::shared_ptr<Camera> camera);
 	void setHeldObject(HeldObject heldObject, const std::shared_ptr<Camera> camera);
-	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const;
+	void draw(std::shared_ptr<MatrixStack> M, const std::shared_ptr<Program> prog) const;
 	
 	double getTime() const { return t; }
 private:

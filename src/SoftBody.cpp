@@ -227,6 +227,7 @@ SoftBody::SoftBody(int rows, int cols, int tubes,
 					addSpring(index2, index3, alpha);
 				}
 				// xyz
+				/*
 				if (i < rows - 1 && j < cols - 1 && k < tubes - 1) {
 					int index1 = (i + 1) * cols * tubes + (j + 1) * tubes + (k + 1);
 					addSpring(index0, index1, alpha);
@@ -240,7 +241,9 @@ SoftBody::SoftBody(int rows, int cols, int tubes,
 					int index7 = (i + 1) * cols * tubes + (j + 1) * tubes + k;
 					addSpring(index6, index7, alpha);
 				}
+				*/
 				// Bend
+				/*
 				// x
 				if (i < rows - 2) {
 					int index1 = (i + 2) * cols * tubes + j * tubes + k;
@@ -256,6 +259,7 @@ SoftBody::SoftBody(int rows, int cols, int tubes,
 					int index1 = i * cols * tubes + j * tubes + (k + 2);
 					addSpring(index0, index1, alpha);
 				}
+				*/
 			}
 		}
 	}
@@ -732,15 +736,15 @@ void SoftBody::init()
 	assert(glGetError() == GL_NO_ERROR);
 }
 
-void SoftBody::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> p) {
+void SoftBody::draw(shared_ptr<MatrixStack> M, const shared_ptr<Program> p) {
 	updatePosNor();
 	updateEle();
 
 	// Draw mesh
 	glUniform3f(p->getUniform("kdFront"), 0.894f, 0.882f, 0.792f);
 	glUniform3f(p->getUniform("kdBack"), 0.776f, 0.843f, 0.835f);
-	MV->pushMatrix();
-	glUniformMatrix4fv(p->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
+	M->pushMatrix();
+	glUniformMatrix4fv(p->getUniform("M"), 1, GL_FALSE, glm::value_ptr(M->topMatrix()));
 	int h_pos = p->getAttribute("aPos");
 	glEnableVertexAttribArray(h_pos);
 	glBindBuffer(GL_ARRAY_BUFFER, posBufID);
@@ -767,5 +771,5 @@ void SoftBody::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> p) {
 	glDisableVertexAttribArray(h_pos);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	MV->popMatrix();
+	M->popMatrix();
 }

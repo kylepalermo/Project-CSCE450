@@ -460,15 +460,15 @@ void Cloth::init()
 	assert(glGetError() == GL_NO_ERROR);
 }
 
-void Cloth::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> p) {
+void Cloth::draw(shared_ptr<MatrixStack> M, const shared_ptr<Program> p) {
 	updatePosNor();
 	updateEle();
 
 	// Draw mesh
 	glUniform3f(p->getUniform("kdFront"), 0.894f, 0.882f, 0.792f);
 	glUniform3f(p->getUniform("kdBack"),  0.776f, 0.843f, 0.835f);
-	MV->pushMatrix();
-	glUniformMatrix4fv(p->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
+	M->pushMatrix();
+	glUniformMatrix4fv(p->getUniform("M"), 1, GL_FALSE, glm::value_ptr(M->topMatrix()));
 	int h_pos = p->getAttribute("aPos");
 	glEnableVertexAttribArray(h_pos);
 	glBindBuffer(GL_ARRAY_BUFFER, posBufID);
@@ -495,5 +495,5 @@ void Cloth::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> p) {
 	glDisableVertexAttribArray(h_pos);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	MV->popMatrix();
+	M->popMatrix();
 }
