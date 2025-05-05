@@ -39,6 +39,8 @@ shared_ptr<Scene> scene;
 
 // TODO: dot product with tris and also area
 // TODO: make sure shear and nonuniform scale is not used, mvit is not available currently
+// TODO: fix colors on static objects
+// TODO: work on demo areas
 
 // https://stackoverflow.com/questions/41470942/stop-infinite-loop-in-different-thread
 std::atomic<bool> stop_flag;

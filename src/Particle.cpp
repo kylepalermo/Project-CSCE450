@@ -55,8 +55,14 @@ void Particle::reset()
 void Particle::draw(shared_ptr<MatrixStack> M, const shared_ptr<Program> prog) const
 {
 	if(sphere) {
-		glUniform3f(prog->getUniform("kdFront"), 0.8f, 0.8f, 0.8f);
-		glUniform3f(prog->getUniform("kdBack"), 0.0f, 0.0f, 0.0f);
+		int kdFrontID = prog->getUniform("kdFront");
+		if (kdFrontID != -1) {
+			glUniform3f(kdFrontID, 0.8f, 0.8f, 0.8f);
+		}
+		int kdBackID = prog->getUniform("kdBack");
+		if (kdBackID != -1) {
+			glUniform3f(kdBackID, 0.0f, 0.0f, 0.0f);
+		}
 		M->pushMatrix();
 		M->translate(float(x(0)), float(x(1)), float(x(2)));
 		M->scale(float(r));

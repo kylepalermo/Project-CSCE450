@@ -23,6 +23,15 @@ Tetrahedron::Tetrahedron(const std::shared_ptr<Shape> shape) :
 
 void Tetrahedron::draw(std::shared_ptr<MatrixStack> M, const std::shared_ptr<Program> prog) const {
 	if (tetrahedron) {
+		int kdFrontID = prog->getUniform("kdFront");
+		if (kdFrontID != -1) {
+			glUniform3f(kdFrontID, 0.8f, 0.8f, 0.8f);
+		}
+		int kdBackID = prog->getUniform("kdBack");
+		if (kdBackID != -1) {
+			glUniform3f(kdBackID, 0.0f, 0.0f, 0.0f);
+		}
+
 		M->pushMatrix();
 		
 		glm::vec3 p0(x[0].x(), x[0].y(), x[0].z());
