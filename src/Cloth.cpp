@@ -68,6 +68,26 @@ Cloth::Cloth(int rows, int cols,
 		}
 	}
 
+	for (int i = 0; i < rows - 1; i++) {
+		for (int j = 0; j < cols - 1; j++) {
+			Quad &Q = cells[i][j];
+
+			int a = i * cols		+ j;
+			int b = (i + 1) * cols	+ j;
+			int c = (i + 1) * cols	+ (j + 1);
+			int d = i * cols		+ (j + 1);
+			
+			//abd
+			Q.tris[0].index0 = a;
+			Q.tris[0].index1 = b;
+			Q.tris[0].index2 = c;
+			//cdb
+			Q.tris[1].index0 = c;
+			Q.tris[1].index1 = d;
+			Q.tris[1].index2 = b;
+		}
+	}
+
 	// Create x springs
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols - 1; j++) {
@@ -313,13 +333,40 @@ void Cloth::step(
 	const std::vector< std::shared_ptr<Cylinder> > cylinders,
 	const std::vector< std::shared_ptr<Tetrahedron> > tetrahedrons
 ) {
-	for (shared_ptr<Particle> particle : particles) {
+	vector<Vector3d> windForces(particles.size(), Vector3d::Zero());
+	for (int i = 0; i < rows - 1; i++) {
+		for (int j = 0; j < cols - 1; j++) {
+			const Quad &Q = cells[i][j];
+			for (int t = 0; t < 2; t++) {
+				const Tri &T = Q.tris[t];
+
+				Vector3d &x0 = particles[T.index0]->x;
+				Vector3d &x1 = particles[T.index1]->x;
+				Vector3d &x2 = particles[T.index2]->x;
+
+				Vector3d normal = (x1 - x0).cross(x2 - x0);
+				double area = normal.norm();
+				normal.normalize();
+				double pressure = normal.dot(wind);
+				Vector3d triForce = normal * (pressure * area);
+				
+				windForces[T.index0] += triForce / 3.0;
+				windForces[T.index1] += triForce / 3.0;
+				windForces[T.index2] += triForce / 3.0;
+			}
+		}
+	}
+
+	for (int i = 0; i < particles.size(); i++) {
+		shared_ptr<Particle> particle = particles.at(i);
 		if (particle->fixed) {
 			particle->v = particle->v0;
 			continue;
 		}
 
-		Vector3d particleForce = particle->m * grav - particle->d * particle->v + wind;
+		Vector3d particleForce = particle->m * grav 
+			- particle->d * particle->v 
+			+ windForces[i];
 		particle->v += (h / particle->m) * particleForce;
 		particle->p = particle->x;
 		particle->x += h * particle->v;
@@ -465,8 +512,14 @@ void Cloth::draw(shared_ptr<MatrixStack> M, const shared_ptr<Program> p) {
 	updateEle();
 
 	// Draw mesh
-	glUniform3f(p->getUniform("kdFront"), 0.894f, 0.882f, 0.792f);
-	glUniform3f(p->getUniform("kdBack"),  0.776f, 0.843f, 0.835f);
+	int kdFrontID = p->getUniform("kdFront");
+	if (kdFrontID != -1) {
+		glUniform3f(kdFrontID, 0.894f, 0.882f, 0.792f);
+	}
+	int kdBackID = p->getUniform("kdBack");
+	if (kdBackID != -1) {
+		glUniform3f(kdBackID, 0.776f, 0.843f, 0.835f);
+	}
 	M->pushMatrix();
 	glUniformMatrix4fv(p->getUniform("M"), 1, GL_FALSE, glm::value_ptr(M->topMatrix()));
 	int h_pos = p->getAttribute("aPos");
@@ -475,10 +528,12 @@ void Cloth::draw(shared_ptr<MatrixStack> M, const shared_ptr<Program> p) {
 	glBufferData(GL_ARRAY_BUFFER, posBuf.size()*sizeof(float), &posBuf[0], GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(h_pos, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
 	int h_nor = p->getAttribute("aNor");
-	glEnableVertexAttribArray(h_nor);
-	glBindBuffer(GL_ARRAY_BUFFER, norBufID);
-	glBufferData(GL_ARRAY_BUFFER, norBuf.size()*sizeof(float), &norBuf[0], GL_DYNAMIC_DRAW);
-	glVertexAttribPointer(h_nor, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
+	if (h_nor >= 0) {
+		glEnableVertexAttribArray(h_nor);
+		glBindBuffer(GL_ARRAY_BUFFER, norBufID);
+		glBufferData(GL_ARRAY_BUFFER, norBuf.size() * sizeof(float), &norBuf[0], GL_DYNAMIC_DRAW);
+		glVertexAttribPointer(h_nor, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
+	}
 	int h_tex = p->getAttribute("aTex");
 	if(h_tex >= 0) {
 		glEnableVertexAttribArray(h_tex);
@@ -491,7 +546,9 @@ void Cloth::draw(shared_ptr<MatrixStack> M, const shared_ptr<Program> p) {
 	if(h_tex >= 0) {
 		glDisableVertexAttribArray(h_tex);
 	}
-	glDisableVertexAttribArray(h_nor);
+	if (h_nor >= 0) {
+		glDisableVertexAttribArray(h_nor);
+	}
 	glDisableVertexAttribArray(h_pos);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

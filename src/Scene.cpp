@@ -18,7 +18,7 @@ Scene::Scene() :
 	h(1e-2),
 	grav(0.0, 0.0, 0.0),
 	wind(0.0, 0.0, 0.0),
-	windMaxMagnitude(0.005),
+	windMaxMagnitude(5.0),
 	windTarget(0.0, 0.0, 0.0),
 	prevWindTarget(0.0, 0.0, 0.0),
 	windN(3000), // currently 10 seconds
@@ -247,7 +247,6 @@ void Scene::setHeldObject(HeldObject heldObject, const std::shared_ptr<Camera> c
 
 void Scene::draw(shared_ptr<MatrixStack> M, const shared_ptr<Program> prog) const
 {
-	glUniform3fv(prog->getUniform("kdFront"), 1, Vector3f(1.0, 1.0, 1.0).data());
 	for(auto s : spheres) {
 		s->draw(M, prog);
 	}
