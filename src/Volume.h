@@ -1,11 +1,6 @@
 #ifndef VOLUME_H
 #define VOLUME_H
 
-// Very useful video:
-// https://www.youtube.com/watch?v=uCaHXkS2cUg
-// After implementing, test using only tetrahedral springs and doing fewer iterations
-// big wins on compute are possible if those two are possible
-
 #include <memory>
 
 #include "Particle.h"

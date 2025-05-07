@@ -4,8 +4,6 @@
 
 #include <memory>
 
-// TODO: maybe add a separate max stretch distance parameter? Just using L isnt as flexible for different resolutions
-
 class Particle;
 
 class Spring
